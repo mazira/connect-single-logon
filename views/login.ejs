@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Login</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1>Session Expire Test Login</h1>
+    <p class="info">Please login below, there's no set account on the server, one will be created for you dynamically.  If you login
+    with the same account elsewhere, this session will expire and kick you out.</p>
+    <% if (loginfailure && loginfailure.length > 0) { %>
+      <div class="login-failure">
+        <h4>Failed to log you in</h4>
+        <% for(var i = 0 ; i < loginfailure.length ; i ++) { %>
+        <p><%= loginfailure[i] %></p>
+        <% } %>
+      </div>
+    <% } %>
+        
+    <form action="/login" method="POST">
+      <label for="username">Username</label>
+      <input type="text" maxlength="40" name="username">
+
+      <label for="password">Password</label>
+      <input type="password" maxlength="40" name="password">
+      <input type="submit" value="Login">
+    </form>
+  </body>
+</html>
