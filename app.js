@@ -9,7 +9,6 @@ var express = require('express')
   , http = require('http')
   , flash = require('connect-flash')
   , path = require('path')
-  , crypto = require('crypto');
 
 var app = express();
 
@@ -19,21 +18,22 @@ var app = express();
  * @flush_session   A function that will flush a user's session (clear the state which makes your
  *                  auth system recognize a user)
  */
-singleLogon = function (uniqueUser, flushSession) {
+singleLogon = function (options) {
+  var fnUnique = options.uniqueUser;
+  var fnFlushSession = options.flushSession || function() { };
+
+  if (!fnUnique) throw new Error("uniqueUser parameter is required")
+
   return function(req, res, next) {
     if (!req.session || !req.sessionStore) throw new Error("Please include this middleware after session");
 
-    function secureKey() {
-      return crypto.randomBytes(48).toString('hex');
-    }
-
     function storeKey(user) {
-      var key = user || uniqueUser(req);
-      return "singleLogonUserId." + key;
+      var key = user || fnUnique(req);
+      return "singleLogon." + key + ".activeSessionID";
     }
 
-    function storeValidKey(user, key) {
-      var dummy = { cookie: { _expires: null }, singleLogonId: key };
+    function storeValidSessionID(user, sessionID) {
+      var dummy = { cookie: { _expires: null }, singleLogonID: sessionID };
       return req.sessionStore.set(storeKey(), dummy, function(err) {
         if (err) {
           console.log("Failed to store key with: " + dummy);
@@ -41,52 +41,45 @@ singleLogon = function (uniqueUser, flushSession) {
       });
     }
 
-    function getValidKey(user, fn) {
+    function getValidSessionID(user, fn) {
       req.sessionStore.get(storeKey(), function(err, sess) {
         if (err)
-          fn(err)
+          fn(err);
         else {
-          fn(null, sess.singleLogonId)
+          fn(null, sess.singleLogonID);
         }
       });
     }
 
     // Provide a function to set this session as the active session
     req.makeSessionExclusive = function() {
-      var userKey = uniqueUser(req);
+      var userKey = fnUnique(req);
       if (!userKey) throw new Error("Make sure you can provide a unique user id before calling makeSessionExclsive");
     
-      var key = secureKey();
-
-      storeValidKey(userKey, key);
-      req.session.singleLogonSecureKey = key;
+      storeValidSessionID(userKey, req.sessionID);
     }
 
     //
     // get this user's key, if we cannot determine at this time, it mostly means
     // that no user is logged in, which actually should have been taken care by
     // deleting the singleLogonSecureKey.
-    userKey = uniqueUser(req)
+    userKey = fnUnique(req)
     if (!userKey) return next();
 
-    // if the secure key hasn't been set, we cannot really validate anything
-    if (!req.session.singleLogonSecureKey) return next();
+    // the user doesn't have a session id yet?
+    if (!req.sessionID) return next();
     
-    getValidKey(userKey, function(err, currentValidKey) {
+    getValidSessionID(userKey, function(err, currentValidSessionID) {
       if (err) {
         console.log("Middleware failure: Could not load session store key");
         return next();
       }
-      if (!currentValidKey) return next(); // we cannot really do much if we don't have a valid key to match
+      if (!currentValidSessionID) return next(); // we cannot really do much if we don't have a valid key to match
 
       // if this user's key matches the current user's key, let him/her in
-      if (currentValidKey == req.session.singleLogonSecureKey) {
-        return next();
-      }
-      else {
+      if (currentValidSessionID != req.sessionID) {
         // no match
-        flushSession(req);
-        req.session.singleLogonSecureKey = undefined;
+        fnFlushSession(req);
       }
 
       return next();
@@ -104,7 +97,7 @@ app.configure(function(){
   app.use(express.methodOverride());
   app.use(express.cookieParser('SuperAwesomeSecret1231421312412312412312412312412'));
   app.use(express.session());
-  app.use(singleLogon(user.userKey, user.flushSession)),
+  app.use(singleLogon({ uniqueUser: user.userKey, flushSession: user.flushSession}));
   app.use(flash())
   app.use(app.router);
   app.use(require('stylus').middleware(__dirname + '/public'));
