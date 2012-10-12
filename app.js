@@ -20,7 +20,10 @@ var app = express();
  */
 singleLogon = function (options) {
   var fnUnique = options.uniqueUser;
-  var fnFlushSession = options.flushSession || function() { };
+  var fnFlushSession = options.flushSession || function(req) { 
+    req.session.destroy(function(err) {
+      console.log("Regenerate");
+      if (err) console.log("Failed to regenerate session"); }); };
 
   if (!fnUnique) throw new Error("uniqueUser parameter is required")
 
@@ -97,7 +100,7 @@ app.configure(function(){
   app.use(express.methodOverride());
   app.use(express.cookieParser('SuperAwesomeSecret1231421312412312412312412312412'));
   app.use(express.session());
-  app.use(singleLogon({ uniqueUser: user.userKey, flushSession: user.flushSession}));
+  app.use(singleLogon({ uniqueUser: user.userKey }));
   app.use(flash())
   app.use(app.router);
   app.use(require('stylus').middleware(__dirname + '/public'));
