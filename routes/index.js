@@ -6,7 +6,7 @@
 exports.index = function(req, res){
   console.log(req.session)
 
-  if (req.session && req.session.login_id == req.session.valid_login_id) {
+  if (req.session && req.session.logged_in) {
     res.render('index', { username: req.session.username });
   }
   else {
