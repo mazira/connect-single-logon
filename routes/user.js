@@ -37,3 +37,8 @@ exports.userKey = function (req) {
 exports.flushSession = function(req) {
   req.session.logged_in = false;
 }
+
+exports.checkLogin = function(req, res) {
+  var login_status = (req.session && req.session.logged_in);
+  res.json({ logged_in: login_status });
+}

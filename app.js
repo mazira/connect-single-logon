@@ -34,9 +34,10 @@ singleLogon = function (uniqueUser, flushSession) {
 
     function storeValidKey(user, key) {
       var dummy = { cookie: { _expires: null }, singleLogonId: key };
-      console.log("Storing: " + dummy);
       return req.sessionStore.set(storeKey(), dummy, function(err) {
-        console.log("Saved key with data: " + dummy);
+        if (err) {
+          console.log("Failed to store key with: " + dummy);
+        }
       });
     }
 
@@ -45,7 +46,6 @@ singleLogon = function (uniqueUser, flushSession) {
         if (err)
           fn(err)
         else {
-          console.log(sess)
           fn(null, sess.singleLogonId)
         }
       });
@@ -72,8 +72,6 @@ singleLogon = function (uniqueUser, flushSession) {
     // if the secure key hasn't been set, we cannot really validate anything
     if (!req.session.singleLogonSecureKey) return next();
     
-    console.log("Key is set");
-
     getValidKey(userKey, function(err, currentValidKey) {
       if (err) {
         console.log("Middleware failure: Could not load session store key");
@@ -81,22 +79,16 @@ singleLogon = function (uniqueUser, flushSession) {
       }
       if (!currentValidKey) return next(); // we cannot really do much if we don't have a valid key to match
 
-      console.log(currentValidKey + ", " + req.session.singleLogonSecureKey);
-
       // if this user's key matches the current user's key, let him/her in
       if (currentValidKey == req.session.singleLogonSecureKey) {
-        console.log("Key match");
         return next();
       }
       else {
-        // no match, we have reset our key and this user is using an older one, do this 
-        // only when we had a key for this userKey
-        console.log("Flushing session");
+        // no match
         flushSession(req);
         req.session.singleLogonSecureKey = undefined;
       }
 
-      console.log("I was called yay!");
       return next();
     });
   }
@@ -128,6 +120,7 @@ app.get('/users', user.list);
 app.get('/login', user.login);
 app.post('/login', user.processLogin);
 app.get('/logout', user.logout);
+app.post('/api/checklogin', user.checkLogin);
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
