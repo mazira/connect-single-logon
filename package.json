@@ -1,18 +1,19 @@
 {
-  "name": "application-name",
+  "name": "connect-single-logon",
   "version": "0.0.1",
-  "private": true,
-  "scripts": {
-    "start": "node app"
+  "description": "Allow only a single logon per user",
+  "keywords": [ "connect", "single login", "exclusive login", "middleware", "web"],
+  "author": "Uday Verma (uday.karan@gmail.com)",
+  "dependencies": {
+    "connect": ">= 2.6.0"
+  },
+  "main": "index.js",
+  "devDepdencies": {
+    "mocha": "*",
+    "should": "*"
   },
   "engines": {
-    "node": "0.8.x",
-    "npm": "1.1.x"
-  },
-  "dependencies": {
-    "express": "3.0.0rc5",
-    "ejs": "*",
-    "stylus": "*",
-    "connect-flash": "*"
+    "node": ">= 0.5.0"
   }
 }
+
