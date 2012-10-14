@@ -4,7 +4,7 @@ This is a connect middleware to only allow one session per user.  If a user logs
 
 # Installation
 
-  $ npm install connect-single-logon
+    $ npm install connect-single-logon
 
 # Usage
 
@@ -12,37 +12,43 @@ To use this middleware, include it in your list of middlewares.  This middleware
 
 To get this to work, you first install the middle ware
 
-  app.use(express.cookieParser('SuperAwesomeSecret1231421312412312412312412312412'));
-  app.use(express.session());
-  app.use(singleLogon({ uniqueUser: function(req) {
-    return req.session.username;
-  });
+    ```javascript
+    app.use(express.cookieParser('SuperAwesomeSecret1231421312412312412312412312412'));
+    app.use(express.session());
+    app.use(singleLogon({ uniqueUser: function(req) {
+        return req.session.username;             
+    });
+    ```
 
 The uniqueUser function is a required paramter.  It's a callback which is used to uniquely identify a user.  Only one of the sessions
 belonging to a user will be kept active.
 
 To mark a session exclusive for a user, e.g. right after successful authentication, you need to call req.session.makeExclusive function.
 
-  if (authenticated()) {
-    req.session.logged_in = true;
-    req.session.username = username;
+    ```javascript
+    if (authenticated()) {
+        req.session.logged_in = true;
+        req.session.username = username;
 
-    req.session.makeExclusive();
-  }
+        req.session.makeExclusive();
+    }
+    ```
 
 This makes the session exclusive for the newly logged in user.  Any other session for this user which tries to access any of your web resources will now be destroyed.  
 
 If you don't want the whole session to be destroyed, you can provide a flushSession function as an argument when initializing this middleware. E.g. if your website determine's a user's current status as logged-in by keeping track of a session variable logged_in, then just merely setting this variable to false will prevent user from logging in.  This way you can still maintain state in the session while logging the user out.
 
-  app.use(express.cookieParser('SuperAwesomeSecret1231421312412312412312412312412'));
-  app.use(express.session());
-  app.use(singleLogon({ 
-    uniqueUser: function(req) {
-      return req.session.username;
-    },
-    flushSession: function(req) {
-      req.session.logged_in = false;
-    }));
+    ```javascript
+    app.use(express.cookieParser('SuperAwesomeSecret1231421312412312412312412312412'));
+    app.use(express.session());
+    app.use(singleLogon({ 
+        uniqueUser: function(req) {
+            return req.session.username;
+        },
+        flushSession: function(req) {
+            req.session.logged_in = false;
+        }));
+    ```
 
 # Options
 
