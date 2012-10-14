@@ -24,7 +24,7 @@ exports.processLogin = function(req, res) {
     req.session.logged_in = true;
     req.session.username = username;
 
-    req.makeSessionExclusive();
+    req.session.makeExclusive();
 
     res.redirect("/")
   }
