@@ -5,7 +5,6 @@
   "keywords": [ "connect", "single login", "exclusive login", "middleware", "web"],
   "author": "Uday Verma (uday.karan@gmail.com)",
   "dependencies": {
-    "connect": ">= 2.6.0"
   },
   "main": "index.js",
   "devDepdencies": {
