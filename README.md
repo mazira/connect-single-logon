@@ -56,7 +56,7 @@ app.use(singleLogon({
 A function callback which will be called by the middleware to determine which unique user the session belongs to.  You need to return something that uniquely identifies users on your website.
 
 ### flushFunction
-A callback called by the middleware to clear the logged in state for a user.  The default action is to completely delete the session.
+A callback called by the middleware to clear the logged in state for a user.  The default action is to regenerate the session.
 
 # LICENSE
 (The MIT License)
